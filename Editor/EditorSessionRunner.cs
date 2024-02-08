@@ -42,7 +42,7 @@ public class EditorSessionStubRunner : EditorSessionRunner
             new SimpleTextEditor.EditorProcessor
             {
                 Input = () => input.TryDequeue(out var s) ? s : string.Empty,
-                Output = s => output.Add(s),
+                Output = output.Add,
                 Session = new SimpleTextEditor.EditorSession()
             }
         )

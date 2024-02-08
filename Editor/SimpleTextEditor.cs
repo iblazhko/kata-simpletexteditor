@@ -32,18 +32,18 @@ public static class SimpleTextEditor
             if (string.IsNullOrWhiteSpace(inputString))
                 return false;
 
-            var pair = inputString.Split(' ');
-            var operation = Enum.Parse<OperationId>(pair[0]);
+            var args = inputString.Split(' ', 2);
+            var operation = Enum.Parse<OperationId>(args[0]);
             switch (operation)
             {
                 case OperationId.Append:
-                    ProcessCommand(new AppendString { Text = pair[1] });
+                    ProcessCommand(new AppendString { Text = args[1] });
                     break;
                 case OperationId.Delete:
-                    ProcessCommand(new DeleteLastCharacters { CharactersCount = int.Parse(pair[1]) });
+                    ProcessCommand(new DeleteLastCharacters { CharactersCount = int.Parse(args[1]) });
                     break;
                 case OperationId.Print:
-                    ProcessCommand(new PrintCharacter { CharacterPosition = int.Parse(pair[1]) });
+                    ProcessCommand(new PrintCharacter { CharacterPosition = int.Parse(args[1]) });
                     break;
                 case OperationId.Undo:
                     ProcessCommand(new UndoLastEdit());
