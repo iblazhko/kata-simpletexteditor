@@ -55,26 +55,26 @@ public static class SimpleTextEditor
             return true;
         }
 
-        public void ProcessCommand(AppendString cmd)
+        private void ProcessCommand(AppendString cmd)
         {
             var evt = Session.Aggregate.Append(Session.State, cmd);
             Session.Events.Add(evt);
             Session.State = Session.Applier.Apply(Session.State, evt);
         }
 
-        public void ProcessCommand(DeleteLastCharacters cmd)
+        private void ProcessCommand(DeleteLastCharacters cmd)
         {
             var evt = Session.Aggregate.Delete(Session.State, cmd);
             Session.Events.Add(evt);
             Session.State = Session.Applier.Apply(Session.State, evt);
         }
 
-        public void ProcessCommand(PrintCharacter cmd)
+        private void ProcessCommand(PrintCharacter cmd)
         {
             Output(Session.State.Text[(cmd.CharacterPosition - 1)..(cmd.CharacterPosition)]);
         }
 
-        public void ProcessCommand(UndoLastEdit cmd)
+        private void ProcessCommand(UndoLastEdit _)
         {
             if (Session.Events.Count == 0)
                 return;
@@ -90,48 +90,33 @@ public static class SimpleTextEditor
     {
         public EditorState Apply(EditorState state, Event evt)
         {
-            switch (evt)
+            state.Text = evt switch
             {
-                case StringAppended appended:
-                    state.Text = string.Concat(state.Text, appended.AppendedText);
-                    break;
-                case LastCharactersDeleted deleted:
-                    state.Text = state.Text[..^deleted.CharactersCount];
-                    break;
-            }
+                StringAppended appended => string.Concat(state.Text, appended.AppendedText),
+                LastCharactersDeleted deleted => state.Text[..^deleted.CharactersCount],
+                _ => state.Text
+            };
             return state;
         }
 
         public EditorState Undo(EditorState state, Event evt)
         {
-            switch (evt)
+            state.Text = evt switch
             {
-                case StringAppended appended:
-                    state.Text = state.Text[..^appended.AppendedText.Length];
-                    break;
-                case LastCharactersDeleted deleted:
-                    state.Text = string.Concat(state.Text, deleted.DeletedText);
-                    break;
-            }
+                StringAppended appended => state.Text[..^appended.AppendedText.Length],
+                LastCharactersDeleted deleted => string.Concat(state.Text, deleted.DeletedText),
+                _ => state.Text
+            };
             return state;
         }
     }
 
     public class EditorAggregate
     {
-        public StringAppended Append(EditorState state, AppendString cmd)
-        {
-            return new StringAppended { AppendedText = cmd.Text };
-        }
+        public StringAppended Append(EditorState state, AppendString cmd) => new() { AppendedText = cmd.Text };
 
-        public LastCharactersDeleted Delete(EditorState state, DeleteLastCharacters cmd)
-        {
-            return new LastCharactersDeleted
-            {
-                CharactersCount = cmd.CharactersCount,
-                DeletedText = state.Text[^cmd.CharactersCount..]
-            };
-        }
+        public LastCharactersDeleted Delete(EditorState state, DeleteLastCharacters cmd) =>
+            new() { CharactersCount = cmd.CharactersCount, DeletedText = state.Text[^cmd.CharactersCount..] };
     }
 
     public class EditorState
@@ -139,7 +124,7 @@ public static class SimpleTextEditor
         public string Text { get; set; } = string.Empty;
     }
 
-    public enum OperationId
+    private enum OperationId
     {
         Append = 1,
         Delete = 2,
